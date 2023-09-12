@@ -61,7 +61,7 @@ void load_config() {
 }
 
 static volatile sig_atomic_t sigflag = 0;
-static volatile sig_atomic_t stateflag = 0; // 0 = stopped, 1 = started
+static volatile sig_atomic_t stateflag = 1; // 0 = stopped, 1 = started
 
 const bool useApriltag = true;
 bool test = false;
@@ -302,7 +302,7 @@ void outgoingThread()
         // Read frame in from the queue and push it to stream
         if (qsize > 0) 
         {
-            //cout << "debug:Pushing output frame to stream:" << qsize << std::endl;
+            // cout << "debug:Pushing output frame to stream:" << qsize << std::endl;
             // If the queue already has more than 1 frame then pop it, to prevent buildup
             // We only want to send the latest frame
             while (qsize > 1)
@@ -492,6 +492,7 @@ int main(int argc, char **argv)
             std::cerr << "Error can't create video writer" << std::endl;
             return 1;
         }
+	std::cout << "Making output" << std::endl;
     }
 
     /*

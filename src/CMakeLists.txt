@@ -14,10 +14,10 @@ set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -std=c++0x -pthread -march=a
 set(cpp_compile_flags "-std=gnu++11 -pthread")
 add_definitions(${cpp_compile_flags})
 
-include_directories(${aruco_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(track_targets aruco ${aruco_LIBS} ${OpenCV_LIBS} pthread)
+include_directories(${aruco_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} mavlink/v2.0/ardupilotmega)
+target_link_libraries(track_targets aruco ${aruco_LIBS} ${OpenCV_LIBS} pthread apriltag)
 link_directories(${aruco_LIB_DIR} ${OpenCV_INSTALL_PATH}/lib})
 link_libraries(pthread)
 install(PROGRAMS track_targets DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -latomic -lapriltag")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -latomic -lapriltag")

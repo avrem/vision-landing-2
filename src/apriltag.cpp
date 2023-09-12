@@ -13,6 +13,15 @@
 #include <apriltag/tagStandard41h12.h>
 //#include <apriltag/tag36h11.h>
 
+#include <mavlink.h>
+
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <arpa/inet.h>
+
 const bool DEBUG = false; // Slower, but processes all markers and provides more info
 int COMPUTE_OFFSETS = false; // Keep disabled. May crash with SIGSEV when unable to compute
 
@@ -37,6 +46,13 @@ extern bool test;
 extern json CONFIG;
 
 std::unordered_map<int, json> markersById;
+
+// fixme: move to json
+const char *proxy_ip = "127.0.0.1";
+const int proxy_port = 14552;
+
+int proxy_sock;
+sockaddr_in proxy_addr;
 
 void init_markers() {
 	// Index markers by id
@@ -68,6 +84,12 @@ void apriltag_init(const aruco::CameraParameters &CP) {
 	det_info.fy = camera_matrix.at<float>(1, 1);
 	det_info.cx = camera_matrix.at<float>(0, 2); // Principal points of a camera
 	det_info.cy = camera_matrix.at<float>(1, 2);
+
+    proxy_sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	memset(&proxy_addr, 0, sizeof(proxy_addr));
+	proxy_addr.sin_family = AF_INET;
+	proxy_addr.sin_addr.s_addr = inet_addr(proxy_ip);
+	proxy_addr.sin_port = htons(proxy_port);
 
 	init_markers();
 }
@@ -283,6 +305,16 @@ bool apriltag_process_image(Mat img, aruco::CameraParameters& CP, LandingTarget&
 			// Send results
 			//sendto(ipc_fd, ipc_data, sizeof(ipc_data), 0, (const struct sockaddr *)&server, sizeof(server));
 		}
+
+        mavlink_message_t msg;
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        float q[4] = {1, 0, 0, 0};
+        mavlink_msg_landing_target_pack(1, 191, &msg, tv.tv_sec*1000000+tv.tv_usec, out.id, MAV_FRAME_BODY_FRD, 0, 0,
+            sqrt(out.x*out.x + out.y*out.y + out.z*out.z), 0, 0, -out.y, out.x, out.z, q, 0, 1);
+	    uint8_t buf[512];
+		int len = mavlink_msg_to_send_buffer(buf, &msg);
+		sendto(proxy_sock, buf, len, 0, (const sockaddr*)&proxy_addr, sizeof(proxy_addr));
 
 		matd_destroy(op);
 		matd_destroy(markerLP);
