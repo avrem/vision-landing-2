@@ -1,0 +1,1 @@
+/usr/lib/jellyfin-ffmpeg/ffmpeg -i rtsp://192.168.144.25:8554/main.264 -fflags nobuffer -flags low_delay -filter:v fps=15 -vcodec rawvideo -pix_fmt yuv420p -f rawvideo tcp://127.0.0.1:6000

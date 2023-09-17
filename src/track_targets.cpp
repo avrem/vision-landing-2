@@ -314,6 +314,7 @@ void outgoingThread()
             outgoingQueue.Pop(oframe);
             vwriter.write(oframe.mat);
         }
+        usleep(10000); // fixme: use condvars
     }
 }
 

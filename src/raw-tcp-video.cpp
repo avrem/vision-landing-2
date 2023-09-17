@@ -80,31 +80,15 @@ void close_video_socket() {
     close(server_socket);
 }
 
+const int w = 1280, h = 720, size = w * (h + h / 2);
+char buffer[size];
+
 // TODO: OPT: Test working directly with yuvMat
 Mat raw_tcp_get_image(uint64_t &ts, float &yaw) {
     std::streamsize bytes;
     int consecutiveErrors = 0;
     for(;;) {
-        int w, h, size;
-
         bool err = false;
-
-        if(!recv(client_socket, &w, sizeof(w), 0)) {
-            raw_tcp_reconnect();
-            continue;
-        }
-
-        if(
-            recv(client_socket, &h, sizeof(h), 0) <= 0
-            || recv(client_socket, &ts, sizeof(ts), 0) <= 0
-            || recv(client_socket, &yaw, sizeof(yaw), 0) <= 0
-            || recv(client_socket, &size, sizeof(size), 0) <= 0
-        ) {
-            err = true;
-            size = 0;
-        }
-
-        char buffer[size];
 
         int bytes_received = 0;
         if(!err) {
@@ -140,6 +124,8 @@ Mat raw_tcp_get_image(uint64_t &ts, float &yaw) {
             double now = CLOCK();
 
             cout << "Got image";
+
+            ts = now; yaw = 1000;
 
             if(lastTime) cout << ", ts: " << ts << ", ms: " << (now - lastTime);
             lastTime = now;
